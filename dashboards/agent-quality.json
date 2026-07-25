@@ -1,0 +1,467 @@
+{
+  "id": "<uuid>",
+  "title": "Agent Quality",
+  "exportedAt": "2026-07-24",
+  "source": "live-signoz-foundry",
+  "dashboard": {
+    "description": "Incident Sentinel investigation volume, cost, and measured eval accuracy",
+    "layout": [
+      {
+        "h": 6,
+        "i": "69b55e04-b720-487c-9456-8d92dc49bc07",
+        "moved": false,
+        "static": false,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
+      {
+        "h": 6,
+        "i": "f2332211-a598-4f23-9b76-3d1ab74d44ba",
+        "moved": false,
+        "static": false,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
+      {
+        "h": 6,
+        "i": "6903e382-4749-480a-a379-f5a505c6f3c6",
+        "moved": false,
+        "static": false,
+        "w": 6,
+        "x": 0,
+        "y": 6
+      },
+      {
+        "h": 6,
+        "i": "4f61cfc6-6c7f-47ee-968c-f96b56a8191e",
+        "moved": false,
+        "static": false,
+        "w": 6,
+        "x": 6,
+        "y": 6
+      },
+      {
+        "h": 6,
+        "i": "681f3d91-699a-4e2d-a8d2-05a3dbfa1e4b",
+        "moved": false,
+        "static": false,
+        "w": 6,
+        "x": 0,
+        "y": 12
+      },
+      {
+        "h": 6,
+        "i": "98a5d48c-17cc-4ab4-b9a2-bf5c43dc4905",
+        "moved": false,
+        "static": false,
+        "w": 6,
+        "x": 6,
+        "y": 12
+      }
+    ],
+    "tags": [
+      "incident-sentinel",
+      "evals",
+      "hackathon"
+    ],
+    "title": "Agent Quality",
+    "variables": {},
+    "version": "v5",
+    "widgets": [
+      {
+        "description": "",
+        "fillSpans": false,
+        "id": "69b55e04-b720-487c-9456-8d92dc49bc07",
+        "nullZeroValues": "zero",
+        "opacity": "1",
+        "panelTypes": "graph",
+        "query": {
+          "builder": {
+            "queryData": [
+              {
+                "aggregations": [
+                  {
+                    "expression": "count()"
+                  }
+                ],
+                "dataSource": "traces",
+                "disabled": false,
+                "expression": "A",
+                "filter": {
+                  "expression": "service.name = 'incident-sentinel' AND name = 'sentinel.investigate'"
+                },
+                "functions": [],
+                "groupBy": [],
+                "having": {
+                  "expression": ""
+                },
+                "legend": "investigations",
+                "limit": null,
+                "orderBy": [],
+                "queryName": "A",
+                "source": "",
+                "stepInterval": null
+              }
+            ],
+            "queryFormulas": [],
+            "queryTraceOperator": []
+          },
+          "clickhouse_sql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "id": "14d7f1d2-6ee4-4193-abcf-3d947ecd6898",
+          "promql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "queryType": "builder",
+          "unit": ""
+        },
+        "softMax": 0,
+        "softMin": 0,
+        "stackedBarChart": false,
+        "thresholds": [],
+        "timePreferance": "GLOBAL_TIME",
+        "title": "Investigations (spans)",
+        "yAxisUnit": "none"
+      },
+      {
+        "description": "",
+        "fillSpans": false,
+        "id": "f2332211-a598-4f23-9b76-3d1ab74d44ba",
+        "nullZeroValues": "zero",
+        "opacity": "1",
+        "panelTypes": "graph",
+        "query": {
+          "builder": {
+            "queryData": [
+              {
+                "aggregations": [
+                  {
+                    "expression": "count()"
+                  }
+                ],
+                "dataSource": "traces",
+                "disabled": false,
+                "expression": "A",
+                "filter": {
+                  "expression": "service.name = 'incident-sentinel' AND name = 'gen_ai.chat'"
+                },
+                "functions": [],
+                "groupBy": [],
+                "having": {
+                  "expression": ""
+                },
+                "legend": "llm",
+                "limit": null,
+                "orderBy": [],
+                "queryName": "A",
+                "source": "",
+                "stepInterval": null
+              }
+            ],
+            "queryFormulas": [],
+            "queryTraceOperator": []
+          },
+          "clickhouse_sql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "id": "daf9602a-ae50-4bc6-a103-60ad8397c916",
+          "promql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "queryType": "builder",
+          "unit": ""
+        },
+        "softMax": 0,
+        "softMin": 0,
+        "stackedBarChart": false,
+        "thresholds": [],
+        "timePreferance": "GLOBAL_TIME",
+        "title": "LLM chat calls",
+        "yAxisUnit": "none"
+      },
+      {
+        "description": "",
+        "fillSpans": false,
+        "id": "6903e382-4749-480a-a379-f5a505c6f3c6",
+        "nullZeroValues": "zero",
+        "opacity": "1",
+        "panelTypes": "graph",
+        "query": {
+          "builder": {
+            "queryData": [
+              {
+                "aggregations": [
+                  {
+                    "metricName": "sentinel_cost_usd_total",
+                    "spaceAggregation": "sum",
+                    "timeAggregation": "increase"
+                  }
+                ],
+                "dataSource": "metrics",
+                "disabled": false,
+                "expression": "A",
+                "functions": [],
+                "groupBy": [],
+                "having": {
+                  "expression": ""
+                },
+                "legend": "cost",
+                "limit": null,
+                "orderBy": [],
+                "queryName": "A",
+                "source": "",
+                "stepInterval": null
+              }
+            ],
+            "queryFormulas": [],
+            "queryTraceOperator": []
+          },
+          "clickhouse_sql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "id": "a61c75a0-d46a-4fda-af19-f6b8ccf17955",
+          "promql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "queryType": "builder",
+          "unit": ""
+        },
+        "softMax": 0,
+        "softMin": 0,
+        "stackedBarChart": false,
+        "thresholds": [],
+        "timePreferance": "GLOBAL_TIME",
+        "title": "Investigation cost (USD)",
+        "yAxisUnit": "none"
+      },
+      {
+        "description": "",
+        "fillSpans": false,
+        "id": "4f61cfc6-6c7f-47ee-968c-f96b56a8191e",
+        "nullZeroValues": "zero",
+        "opacity": "1",
+        "panelTypes": "graph",
+        "query": {
+          "builder": {
+            "queryData": [
+              {
+                "aggregations": [
+                  {
+                    "metricName": "sentinel_eval_pass_ratio",
+                    "spaceAggregation": "avg",
+                    "timeAggregation": "avg"
+                  }
+                ],
+                "dataSource": "metrics",
+                "disabled": false,
+                "expression": "A",
+                "functions": [],
+                "groupBy": [],
+                "having": {
+                  "expression": ""
+                },
+                "legend": "pass_ratio",
+                "limit": null,
+                "orderBy": [],
+                "queryName": "A",
+                "source": "",
+                "stepInterval": null
+              }
+            ],
+            "queryFormulas": [],
+            "queryTraceOperator": []
+          },
+          "clickhouse_sql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "id": "47261349-a1e1-46da-b93e-8bfeb8d5c127",
+          "promql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "queryType": "builder",
+          "unit": ""
+        },
+        "softMax": 0,
+        "softMin": 0,
+        "stackedBarChart": false,
+        "thresholds": [],
+        "timePreferance": "GLOBAL_TIME",
+        "title": "Eval pass ratio",
+        "yAxisUnit": "none"
+      },
+      {
+        "description": "",
+        "fillSpans": false,
+        "id": "681f3d91-699a-4e2d-a8d2-05a3dbfa1e4b",
+        "nullZeroValues": "zero",
+        "opacity": "1",
+        "panelTypes": "graph",
+        "query": {
+          "builder": {
+            "queryData": [
+              {
+                "aggregations": [
+                  {
+                    "metricName": "sentinel_eval_pass_total",
+                    "spaceAggregation": "sum",
+                    "timeAggregation": "increase"
+                  }
+                ],
+                "dataSource": "metrics",
+                "disabled": false,
+                "expression": "A",
+                "functions": [],
+                "groupBy": [],
+                "having": {
+                  "expression": ""
+                },
+                "legend": "pass",
+                "limit": null,
+                "orderBy": [],
+                "queryName": "A",
+                "source": "",
+                "stepInterval": null
+              }
+            ],
+            "queryFormulas": [],
+            "queryTraceOperator": []
+          },
+          "clickhouse_sql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "id": "e1bd7619-679e-4449-8dce-7c04aaa9b670",
+          "promql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "queryType": "builder",
+          "unit": ""
+        },
+        "softMax": 0,
+        "softMin": 0,
+        "stackedBarChart": false,
+        "thresholds": [],
+        "timePreferance": "GLOBAL_TIME",
+        "title": "Eval pass total",
+        "yAxisUnit": "none"
+      },
+      {
+        "description": "",
+        "fillSpans": false,
+        "id": "98a5d48c-17cc-4ab4-b9a2-bf5c43dc4905",
+        "nullZeroValues": "zero",
+        "opacity": "1",
+        "panelTypes": "graph",
+        "query": {
+          "builder": {
+            "queryData": [
+              {
+                "aggregations": [
+                  {
+                    "metricName": "sentinel_eval_fail_total",
+                    "spaceAggregation": "sum",
+                    "timeAggregation": "increase"
+                  }
+                ],
+                "dataSource": "metrics",
+                "disabled": false,
+                "expression": "A",
+                "functions": [],
+                "groupBy": [],
+                "having": {
+                  "expression": ""
+                },
+                "legend": "fail",
+                "limit": null,
+                "orderBy": [],
+                "queryName": "A",
+                "source": "",
+                "stepInterval": null
+              }
+            ],
+            "queryFormulas": [],
+            "queryTraceOperator": []
+          },
+          "clickhouse_sql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "id": "6c05a854-c11c-45df-8895-bbe7653d77b3",
+          "promql": [
+            {
+              "disabled": false,
+              "legend": "",
+              "name": "A",
+              "query": ""
+            }
+          ],
+          "queryType": "builder",
+          "unit": ""
+        },
+        "softMax": 0,
+        "softMin": 0,
+        "stackedBarChart": false,
+        "thresholds": [],
+        "timePreferance": "GLOBAL_TIME",
+        "title": "Eval fail total",
+        "yAxisUnit": "none"
+      }
+    ]
+  }
+}

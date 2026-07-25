@@ -1,0 +1,57 @@
+{
+  "ran_at": "2026-07-24 14:35 UTC",
+  "passed": 3,
+  "total": 3,
+  "results": [
+    {
+      "scenario": "checkout-errors",
+      "fault": "errors",
+      "passed": true,
+      "notes": [
+        "service field match: True (got 'checkout-api')",
+        "failure-mode keyword match: True"
+      ],
+      "verdict_service": "checkout-api",
+      "verdict_root_cause": "Origin appears to be checkout-api (cascade-refined; alert focused on checkout-api). no errors found in inventory-svc",
+      "confidence": 0.0,
+      "degraded": false,
+      "duration_s": 49.3,
+      "cost_usd": 0.014172400000000002,
+      "trace_id": "baa58443b020886714e05d6a5e6fa629"
+    },
+    {
+      "scenario": "payment-latency",
+      "fault": "latency",
+      "passed": true,
+      "notes": [
+        "service field match: True (got 'payment-svc')",
+        "failure-mode keyword match: True",
+        "DEGRADED mode (LLM did not conclude)",
+        "DEGRADED but culprit correct \u2014 counting as PASS"
+      ],
+      "verdict_service": "payment-svc",
+      "verdict_root_cause": "Not determined automatically. Error signals seen in evidence: {\"data\":{\"data\":{\"results\":[{\"nextCursor\":\"MTc4NDkwMjkwNjcwNw==\",\"queryName\":\"A\",\"rows\":[{\"data\":{\"client.address\":\"\",\"cloud.account.id\":null,\"cloud.platform\":null,\"cloud.provider\":null,\"cloud.region\" | {\"data\":{\"data\":{\"results\":[{\"nextCursor\":\"MTc4NDkwMjkwNjcwOQ==\",\"queryName\":\"A\",\"rows\":[{\"data\":{\"client.address\":\"\",\"cloud.account.id\":null,\"cloud.platform\":null,\"cloud.provider\":null,\"cloud.region\"",
+      "confidence": 0.3,
+      "degraded": true,
+      "duration_s": 34.8,
+      "cost_usd": 0.005245680000000001,
+      "trace_id": "c91403c1a9afffcdd405e8fe9f347c17"
+    },
+    {
+      "scenario": "inventory-errors",
+      "fault": "inventory-errors",
+      "passed": true,
+      "notes": [
+        "service field match: True (got 'inventory-svc')",
+        "failure-mode keyword match: True"
+      ],
+      "verdict_service": "inventory-svc",
+      "verdict_root_cause": "inventory-svc is returning errors / failures (evidence from SigNoz MCP traces/logs). Ignore investigator-infra noise.",
+      "confidence": 0.8,
+      "degraded": false,
+      "duration_s": 58.7,
+      "cost_usd": 0.00953656,
+      "trace_id": "55b75ee14c78e9adaae440f9c102b197"
+    }
+  ]
+}

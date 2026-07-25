@@ -1,0 +1,26 @@
+# Optional: point SigNoz k8s-infra at Foundry collector (install on demo cluster)
+global:
+  cloud: other
+  clusterName: hackathon-demo
+  deploymentEnvironment: hackathon
+
+otelCollectorEndpoint: http://<foundry-host>:4318
+otelInsecure: true
+
+presets:
+  otlphttpExporter:
+    enabled: true
+  otlpExporter:
+    enabled: false
+  logsCollection:
+    enabled: true
+
+otelAgent:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 200m, memory: 256Mi }
+
+otelDeployment:
+  resources:
+    requests: { cpu: 50m, memory: 128Mi }
+    limits: { cpu: 200m, memory: 256Mi }

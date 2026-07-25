@@ -1,0 +1,169 @@
+{
+  "title": "Agent Quality",
+  "description": "Incident Sentinel \u2014 investigation volume, cost, and measured accuracy (eval metrics from incident-sentinel-evals)",
+  "tags": [
+    "incident-sentinel",
+    "evals",
+    "hackathon"
+  ],
+  "widgets": [
+    {
+      "title": "Investigations (spans)",
+      "panelTypes": "graph",
+      "yAxisUnit": "none",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "queryName": "A",
+              "dataSource": "traces",
+              "aggregations": [
+                {
+                  "expression": "count()"
+                }
+              ],
+              "filter": {
+                "expression": "service.name = 'incident-sentinel' AND name = 'sentinel.investigate'"
+              },
+              "legend": "investigations"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "LLM chat calls",
+      "panelTypes": "graph",
+      "yAxisUnit": "none",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "queryName": "A",
+              "dataSource": "traces",
+              "aggregations": [
+                {
+                  "expression": "count()"
+                }
+              ],
+              "filter": {
+                "expression": "service.name = 'incident-sentinel' AND name = 'gen_ai.chat'"
+              },
+              "legend": "llm_calls"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Investigation cost (USD)",
+      "panelTypes": "graph",
+      "yAxisUnit": "none",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "queryName": "A",
+              "dataSource": "metrics",
+              "aggregations": [
+                {
+                  "metricName": "sentinel_cost_usd_total",
+                  "timeAggregation": "increase",
+                  "spaceAggregation": "sum"
+                }
+              ],
+              "legend": "cost_usd"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Eval pass ratio",
+      "panelTypes": "graph",
+      "yAxisUnit": "none",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "queryName": "A",
+              "dataSource": "metrics",
+              "aggregations": [
+                {
+                  "metricName": "sentinel_eval_pass_ratio",
+                  "timeAggregation": "avg",
+                  "spaceAggregation": "avg"
+                }
+              ],
+              "legend": "pass_ratio"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Eval runs (pass vs fail)",
+      "panelTypes": "graph",
+      "yAxisUnit": "none",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "queryName": "A",
+              "dataSource": "metrics",
+              "aggregations": [
+                {
+                  "metricName": "sentinel_eval_pass_total",
+                  "timeAggregation": "increase",
+                  "spaceAggregation": "sum"
+                }
+              ],
+              "legend": "pass"
+            },
+            {
+              "queryName": "B",
+              "dataSource": "metrics",
+              "aggregations": [
+                {
+                  "metricName": "sentinel_eval_fail_total",
+                  "timeAggregation": "increase",
+                  "spaceAggregation": "sum"
+                }
+              ],
+              "legend": "fail"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "title": "Investigation duration (p95)",
+      "panelTypes": "graph",
+      "yAxisUnit": "s",
+      "query": {
+        "queryType": "builder",
+        "builder": {
+          "queryData": [
+            {
+              "queryName": "A",
+              "dataSource": "metrics",
+              "aggregations": [
+                {
+                  "metricName": "sentinel_investigation_duration_seconds",
+                  "timeAggregation": "p95",
+                  "spaceAggregation": "avg"
+                }
+              ],
+              "legend": "p95_duration_s"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

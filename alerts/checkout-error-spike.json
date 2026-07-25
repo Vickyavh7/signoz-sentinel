@@ -1,0 +1,20 @@
+{
+  "alert": "checkout-error-spike",
+  "alertType": "TRACE_BASED_ALERT",
+  "ruleType": "threshold_rule",
+  "severity": "warning",
+  "description": "Elevated error spans on checkout-api — triggers Incident Sentinel",
+  "evalWindow": "5m0s",
+  "frequency": "1m0s",
+  "condition": {
+    "target": 3,
+    "op": "1",
+    "matchType": "1"
+  },
+  "preferredChannels": ["incident-sentinel-webhook"],
+  "labels": {
+    "service": "checkout-api",
+    "team": "hackathon"
+  },
+  "notes": "Create via SigNoz UI/API after webhook channel exists. Exact JSON fields vary by SigNoz version — use UI if API schema differs."
+}

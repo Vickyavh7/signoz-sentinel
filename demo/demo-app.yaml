@@ -1,0 +1,334 @@
+# Demo microservices for Incident Sentinel
+# Deploy to k8s namespace `foundry`. Point OTEL at Foundry SigNoz host:4318.
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentinel-demo-code
+  namespace: foundry
+data:
+  app.py: |
+    import os
+    import time
+    import random
+    import logging
+    import httpx
+    from fastapi import FastAPI, Response
+    from opentelemetry import trace
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+    from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
+    from opentelemetry.exporter.otlp.proto.http._log_exporter import OTLPLogExporter
+    from opentelemetry._logs import set_logger_provider
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.instrumentation.logging import LoggingInstrumentor
+
+    SERVICE = os.getenv("OTEL_SERVICE_NAME", "demo-service")
+    ENDPOINT = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:4318")
+    ROLE = os.getenv("DEMO_ROLE", "checkout")  # checkout | payment | inventory
+    ERROR_RATE = float(os.getenv("ERROR_RATE", "0.0"))
+    EXTRA_LATENCY_MS = int(os.getenv("EXTRA_LATENCY_MS", "0"))
+    DOWNSTREAM = os.getenv("DOWNSTREAM_URL", "")
+
+    resource = Resource.create({
+        "service.name": SERVICE,
+        "deployment.environment": os.getenv("DEPLOY_ENV", "hackathon"),
+        "demo.role": ROLE,
+    })
+
+    tp = TracerProvider(resource=resource)
+    tp.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=f"{ENDPOINT}/v1/traces")))
+    trace.set_tracer_provider(tp)
+    tracer = trace.get_tracer(__name__)
+
+    lp = LoggerProvider(resource=resource)
+    lp.add_log_record_processor(BatchLogRecordProcessor(OTLPLogExporter(endpoint=f"{ENDPOINT}/v1/logs")))
+    set_logger_provider(lp)
+    LoggingInstrumentor().instrument(set_logging_format=True)
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger().addHandler(LoggingHandler(level=logging.INFO, logger_provider=lp))
+    log = logging.getLogger(SERVICE)
+
+    app = FastAPI(title=SERVICE)
+    FastAPIInstrumentor.instrument_app(app)
+
+    def maybe_fault(span_name: str):
+        if EXTRA_LATENCY_MS:
+            time.sleep(EXTRA_LATENCY_MS / 1000.0)
+        if random.random() < ERROR_RATE:
+            with tracer.start_as_current_span(span_name) as span:
+                span.set_attribute("error", True)
+                span.set_status(trace.Status(trace.StatusCode.ERROR, "injected fault"))
+                log.error("%s failed after injected fault (%sms)", span_name, EXTRA_LATENCY_MS)
+                raise RuntimeError(f"{span_name} failed")
+
+    @app.get("/healthz")
+    def healthz():
+        return {"ok": True, "role": ROLE, "service": SERVICE}
+
+    @app.get("/inventory")
+    def inventory():
+        with tracer.start_as_current_span("inventory-check"):
+            maybe_fault("inventory-check")
+            log.info("inventory checked ok")
+            return {"items": 42, "status": "ok"}
+
+    @app.get("/payment")
+    def payment():
+        with tracer.start_as_current_span("payment-gateway") as span:
+            maybe_fault("payment-gateway")
+            if DOWNSTREAM:
+                r = httpx.get(f"{DOWNSTREAM}/inventory", timeout=5.0)
+                r.raise_for_status()
+            log.info("payment ok")
+            span.set_attribute("payment.status", "ok")
+            return {"paid": True}
+
+    @app.get("/checkout")
+    def checkout():
+        with tracer.start_as_current_span("checkout") as span:
+            try:
+                maybe_fault("checkout")
+                if DOWNSTREAM:
+                    r = httpx.get(f"{DOWNSTREAM}/payment", timeout=8.0)
+                    r.raise_for_status()
+                log.info("checkout completed")
+                return {"order": "ok"}
+            except Exception as e:
+                span.record_exception(e)
+                span.set_status(trace.Status(trace.StatusCode.ERROR, str(e)))
+                log.error("checkout failed: %s", e)
+                return Response(content='{"error":"checkout failed"}', status_code=502, media_type="application/json")
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-svc
+  namespace: foundry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-svc
+  template:
+    metadata:
+      labels:
+        app: inventory-svc
+    spec:
+      containers:
+        - name: app
+          image: python:3.11-slim
+          command: ["bash", "-lc"]
+          args:
+            - |
+              pip install -q fastapi uvicorn httpx \
+                opentelemetry-api opentelemetry-sdk \
+                opentelemetry-exporter-otlp-proto-http \
+                opentelemetry-instrumentation-fastapi \
+                opentelemetry-instrumentation-logging &&
+              cd /app && uvicorn app:app --host 0.0.0.0 --port 8000
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: inventory-svc
+            - name: DEMO_ROLE
+              value: inventory
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://OTLP_HOST_PLACEHOLDER:4318"
+            - name: ERROR_RATE
+              value: "0.0"
+            - name: EXTRA_LATENCY_MS
+              value: "0"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: code
+              mountPath: /app
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+      volumes:
+        - name: code
+          configMap:
+            name: sentinel-demo-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inventory-svc
+  namespace: foundry
+spec:
+  selector:
+    app: inventory-svc
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-svc
+  namespace: foundry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-svc
+  template:
+    metadata:
+      labels:
+        app: payment-svc
+    spec:
+      containers:
+        - name: app
+          image: python:3.11-slim
+          command: ["bash", "-lc"]
+          args:
+            - |
+              pip install -q fastapi uvicorn httpx \
+                opentelemetry-api opentelemetry-sdk \
+                opentelemetry-exporter-otlp-proto-http \
+                opentelemetry-instrumentation-fastapi \
+                opentelemetry-instrumentation-logging &&
+              cd /app && uvicorn app:app --host 0.0.0.0 --port 8000
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: payment-svc
+            - name: DEMO_ROLE
+              value: payment
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://OTLP_HOST_PLACEHOLDER:4318"
+            - name: DOWNSTREAM_URL
+              value: "http://inventory-svc:8000"
+            - name: ERROR_RATE
+              value: "0.0"
+            - name: EXTRA_LATENCY_MS
+              value: "0"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: code
+              mountPath: /app
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+      volumes:
+        - name: code
+          configMap:
+            name: sentinel-demo-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-svc
+  namespace: foundry
+spec:
+  selector:
+    app: payment-svc
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkout-api
+  namespace: foundry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkout-api
+  template:
+    metadata:
+      labels:
+        app: checkout-api
+    spec:
+      containers:
+        - name: app
+          image: python:3.11-slim
+          command: ["bash", "-lc"]
+          args:
+            - |
+              pip install -q fastapi uvicorn httpx \
+                opentelemetry-api opentelemetry-sdk \
+                opentelemetry-exporter-otlp-proto-http \
+                opentelemetry-instrumentation-fastapi \
+                opentelemetry-instrumentation-logging &&
+              cd /app && uvicorn app:app --host 0.0.0.0 --port 8000
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: checkout-api
+            - name: DEMO_ROLE
+              value: checkout
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://OTLP_HOST_PLACEHOLDER:4318"
+            - name: DOWNSTREAM_URL
+              value: "http://payment-svc:8000"
+            - name: ERROR_RATE
+              value: "0.25"
+            - name: EXTRA_LATENCY_MS
+              value: "0"
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: code
+              mountPath: /app
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits: { cpu: "500m", memory: "512Mi" }
+      volumes:
+        - name: code
+          configMap:
+            name: sentinel-demo-code
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkout-api
+  namespace: foundry
+spec:
+  type: ClusterIP
+  selector:
+    app: checkout-api
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: checkout-loadgen
+  namespace: foundry
+spec:
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: curl
+              image: curlimages/curl:8.5.0
+              args:
+                - "-s"
+                - "-o"
+                - "/dev/null"
+                - "-w"
+                - "%{http_code}"
+                - "http://checkout-api:8000/checkout"
+              resources:
+                requests: { cpu: "10m", memory: "32Mi" }
+                limits: { cpu: "50m", memory: "64Mi" }

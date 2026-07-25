@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: incident-sentinel-kagent-notes
+  namespace: foundry
+data:
+  README: |
+    Stretch goal only. See copilot/kagent/README.md in the repo.
+    Do not apply until custom copilot demo is complete.

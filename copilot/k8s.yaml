@@ -1,0 +1,109 @@
+# Copilot + optional NodePort for SigNoz webhook reachability from Foundry host
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: incident-sentinel-code
+  namespace: foundry
+data:
+  # Placeholder — prefer image build; ConfigMap mode for quick cluster demos
+  note: |
+    Prefer building from copilot/Dockerfile. This ConfigMap is reserved for
+    future single-file deploys if needed.
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: incident-sentinel-secrets
+  namespace: foundry
+type: Opaque
+stringData:
+  SIGNOZ_API_KEY: "REPLACE_ME"
+  LLM_API_KEY: ""
+  SLACK_WEBHOOK_URL: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: incident-sentinel
+  namespace: foundry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: incident-sentinel
+  template:
+    metadata:
+      labels:
+        app: incident-sentinel
+    spec:
+      containers:
+        - name: copilot
+          image: python:3.11-slim
+          command: ["bash", "-lc"]
+          args:
+            - |
+              pip install -q -r /src/requirements.txt &&
+              cd /src && uvicorn app.main:app --host 0.0.0.0 --port 8080
+          env:
+            - name: SIGNOZ_URL
+              value: "http://OTLP_HOST_PLACEHOLDER:8080"
+            - name: MCP_URL
+              value: "http://OTLP_HOST_PLACEHOLDER:8000/mcp"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://OTLP_HOST_PLACEHOLDER:4318"
+            - name: OTEL_SERVICE_NAME
+              value: incident-sentinel
+            - name: LLM_PROVIDER
+              value: mock
+            - name: LLM_MODEL
+              value: mock-sre
+            - name: SIGNOZ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: incident-sentinel-secrets
+                  key: SIGNOZ_API_KEY
+            - name: LLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: incident-sentinel-secrets
+                  key: LLM_API_KEY
+                  optional: true
+            - name: SLACK_WEBHOOK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: incident-sentinel-secrets
+                  key: SLACK_WEBHOOK_URL
+                  optional: true
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: src
+              mountPath: /src
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits: { cpu: "1", memory: "1Gi" }
+      volumes:
+        - name: src
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: incident-sentinel
+  namespace: foundry
+spec:
+  type: NodePort
+  selector:
+    app: incident-sentinel
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 32080

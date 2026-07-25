@@ -1,0 +1,45 @@
+{
+  "description": "Golden fault scenarios for Incident Sentinel accuracy evals. Each scenario injects a real fault via demo/break.sh, waits for telemetry, then triggers an investigation and scores the verdict.",
+  "settle_seconds": 90,
+  "scenarios": [
+    {
+      "id": "checkout-errors",
+      "fault": "errors",
+      "alert_payload": {
+        "alert_name": "checkout-error-spike",
+        "labels": {"service": "checkout-api", "severity": "warning", "alertname": "checkout-error-spike"},
+        "status": "firing"
+      },
+      "expected": {
+        "service_any": ["checkout-api", "checkout", "payment-svc", "payment"],
+        "root_cause_any": ["error", "fail", "runtime"]
+      }
+    },
+    {
+      "id": "payment-latency",
+      "fault": "latency",
+      "alert_payload": {
+        "alert_name": "payment-latency-p99",
+        "labels": {"service": "payment-svc", "severity": "warning", "alertname": "payment-latency-p99"},
+        "status": "firing"
+      },
+      "expected": {
+        "service_any": ["payment-svc", "payment"],
+        "root_cause_any": ["latency", "slow", "duration", "delay", "p99", "response time", "took", "ms", "timeout", "bottleneck"]
+      }
+    },
+    {
+      "id": "inventory-errors",
+      "fault": "inventory-errors",
+      "alert_payload": {
+        "alert_name": "inventory-error-spike",
+        "labels": {"service": "inventory-svc", "severity": "warning", "alertname": "inventory-error-spike"},
+        "status": "firing"
+      },
+      "expected": {
+        "service_any": ["inventory-svc", "inventory"],
+        "root_cause_any": ["error", "fail"]
+      }
+    }
+  ]
+}

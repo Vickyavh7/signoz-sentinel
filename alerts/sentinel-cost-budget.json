@@ -1,0 +1,38 @@
+{
+  "alert": "sentinel-cost-budget",
+  "alertType": "METRIC_BASED_ALERT",
+  "ruleType": "threshold_rule",
+  "severity": "info",
+  "description": "Meta-alert: Incident Sentinel investigation spend exceeded demo budget (USD/h). The copilot watches its own cost.",
+  "evalWindow": "1h0m0s",
+  "frequency": "5m0s",
+  "condition": {
+    "compositeQuery": {
+      "queries": [
+        {
+          "type": "builder_query",
+          "spec": {
+            "name": "A",
+            "signal": "metrics",
+            "aggregations": [
+              {"metricName": "sentinel_cost_usd_total", "timeAggregation": "increase", "spaceAggregation": "sum"}
+            ],
+            "disabled": false
+          }
+        }
+      ]
+    },
+    "op": "1",
+    "target": 0.01,
+    "matchType": "1",
+    "selectedQueryName": "A"
+  },
+  "labels": {
+    "component": "incident-sentinel",
+    "team": "hackathon",
+    "kind": "meta-alert"
+  },
+  "preferredChannels": ["incident-sentinel-webhook"],
+  "version": "v5",
+  "_note": "Demo budget intentionally tiny ($0.01/h) so the meta-alert visibly fires after ~3 investigations at llama-3.1-70b market pricing ($0.88/Mtok). Live rule id: <uuid>"
+}
