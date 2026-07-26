@@ -2,8 +2,8 @@
 title: "Incident Sentinel: An SRE Copilot That Investigates SigNoz Alerts — and Observes Itself"
 published: false
 tags: signoz, mcp, opentelemetry, observability
-description: We built an incident copilot on SigNoz MCP that posts Slack reports and postmortems, measures its own accuracy, and pages when it overspends — for the Agents of SigNoz hackathon.
-cover_image: https://raw.githubusercontent.com/Vickyavh7/signoz-sentinel/main/blog/images/02-agent-quality.png
+description: An SRE incident copilot on SigNoz MCP that posts Slack reports and postmortems, measures its own accuracy, and pages when it overspends — observability for the investigator, not only the outage.
+cover_image: https://raw.githubusercontent.com/Vickyavh7/signoz-sentinel/main/blog/images/cover-1000x420.png
 ---
 
 # Incident Sentinel: An SRE Copilot That Investigates SigNoz Alerts — and Observes Itself
@@ -15,7 +15,7 @@ Which trace proves it?
 Which log line explains it?  
 What changed *now*?
 
-For the **[Agents of SigNoz](https://www.wemakedevs.org/hackathons/signoz)** hackathon (**Track 01 — AI & Agent Observability**), we built **Incident Sentinel**: an SRE incident copilot that investigates SigNoz alerts through the **SigNoz MCP server**, posts an evidence-backed report (and postmortem) to Slack, and — the part we care about most — **observes itself** in the same SigNoz instance.
+**Incident Sentinel** is an SRE incident copilot that investigates SigNoz alerts through the **SigNoz MCP server**, posts an evidence-backed report (and postmortem) to Slack, and — the part that matters for real ops — **observes itself** in the same SigNoz instance.
 
 The agent that debugs your system should not be a black box.
 
@@ -23,9 +23,16 @@ The agent that debugs your system should not be a black box.
 
 ---
 
-## The problem (one layer up)
+## The observability gap (one layer up)
 
-AI agents are entering on-call workflows. They call tools, reason over telemetry, and write summaries. But when the agent is wrong, slow, or expensive, teams often have:
+Modern on-call is no longer only “watch the checkout API.” AI agents are entering the loop: they call tools, reason over telemetry, and write summaries. Observability has to cover **both** layers:
+
+| Layer | What you need to see |
+|---|---|
+| The outage | Errors, latency, traces, logs across services |
+| The investigator | Tool calls, LLM latency, tokens, USD cost, accuracy |
+
+Without the second layer, teams often have:
 
 - no investigation span  
 - no token count  
@@ -42,7 +49,7 @@ That’s the same “flying blind” story we tell about LLM apps — applied to
 checkout → payment → inventory     (demo apps + fault injection)
         │ OTLP
         ▼
-   SigNoz + MCP  (Foundry)
+   SigNoz + MCP
         │ alert webhook
         ▼
    Incident Sentinel
@@ -54,7 +61,7 @@ checkout → payment → inventory     (demo apps + fault injection)
 
 Concrete pieces:
 
-1. **SigNoz via Foundry** — `casting.yaml` + `casting.yaml.lock` in the repo (hackathon requirement), MCP enabled.  
+1. **SigNoz** as the single pane — traces, metrics, logs, alerts, dashboards.  
 2. **Fault-injectable demo chain** on Kubernetes: `checkout-api` → `payment-svc` → `inventory-svc`.  
 3. **Incident Sentinel** — FastAPI webhook + tool-calling agent over SigNoz MCP.  
 4. **Slack reports** with evidence links back into SigNoz.  
@@ -62,7 +69,7 @@ Concrete pieces:
 6. **Self-telemetry** — investigation spans, GenAI chat spans, tool spans, `sentinel_tokens_total`, `sentinel_cost_usd_total`.  
 7. **Measured accuracy** — real fault evals in `evals/`, not vibes.
 
-We kept the core agent custom (not only a framework wrapper) so we own GenAI attributes and cost metrics end-to-end. kagent packaging remains a stretch path in the repo.
+We kept the core agent custom so we own GenAI attributes and cost metrics end-to-end.
 
 Here’s the live service map during a fault window — demo apps plus the copilot as a first-class service:
 
@@ -84,11 +91,11 @@ Here’s the live service map during a fault window — demo apps plus the copil
 
 We intentionally **do not auto-remediate**. The copilot diagnoses; humans keep the execute button. That boundary is a feature for trust, not a missing checkbox.
 
-Our alert rules are the entry point — including the meta-alert on the copilot’s own spend:
+Alert rules are the entry point — including a meta-alert on the copilot’s own spend:
 
 ![Alert rules: checkout-error-spike, payment-latency-p99, and sentinel-cost-budget firing](https://raw.githubusercontent.com/Vickyavh7/signoz-sentinel/main/blog/images/04-alerts.png)
 
-*Figure 2. Alert Rules — demo outages plus `sentinel-cost-budget` (`kind: meta-alert`).*
+*Figure 2. Alert Rules — service outages plus `sentinel-cost-budget` (`kind: meta-alert`).*
 
 And every investigation leaves a real OpenTelemetry trace the on-call can open:
 
@@ -116,7 +123,7 @@ inventory-svc failure, possibly due to a recent deployment…
 
 ---
 
-## Favorite design decision: the watcher is watched
+## Design decision: the watcher is watched
 
 We put a **cost-budget meta-alert** on `sentinel_cost_usd_total`.
 
@@ -132,11 +139,13 @@ Operations telemetry for the copilot itself:
 
 *Figure 4. Copilot Operations — investigation volume, GenAI calls, and MCP tool usage.*
 
+That is the observability use case in one sentence: **instrument the outage and the investigation on the same OpenTelemetry-native backend.**
+
 ---
 
 ## Measuring the agent (instead of trusting it)
 
-The most common gap in AI-for-SRE demos: nobody asks **how often the agent is right**.
+The common gap in AI-for-SRE systems: nobody asks **how often the agent is right**.
 
 Our eval harness (`evals/run_evals.py`) injects **real faults**:
 
@@ -163,19 +172,19 @@ Eval metrics are also exported to SigNoz (`sentinel_eval_*`) and shown on an **A
 
 ---
 
-## What broke while building (the useful part)
+## What broke while building
 
-Hackathon infrastructure is part of the story:
+Infrastructure and auth are part of any real observability setup:
 
-- **foundryctl on older Linux** needed a newer glibc — we ran it in a Debian container with the host Docker socket.  
-- **ClickHouse Keeper** crashed on one image pin; pinning an older keeper image stabilized Foundry.  
+- **Older Linux hosts** and tooling glibc mismatches — we ran Foundry tooling in a Debian container with the host Docker socket.  
+- **ClickHouse Keeper** instability on one image pin; pinning an older keeper image stabilized the stack.  
 - **Auth footguns:** Service Account API keys vs user JWTs are not interchangeable with MCP. Wrong header → 401/403 that looks like “MCP is broken.”  
 - **Big models are slow:** webhook delivery must ack immediately; investigations run in the background with timeouts and retries.  
 - **Graceful degradation:** if the LLM never returns a valid conclusion, the report is built from MCP evidence only and marked `degraded` — no canned fake root cause.
 
 ---
 
-## Enterprise-shaped guardrails (still a hackathon build)
+## Guardrails that make this ops-shaped
 
 - Dedupe window per alert / rule  
 - Concurrency cap and bounded investigation steps  
@@ -183,17 +192,17 @@ Hackathon infrastructure is part of the story:
 - Token + USD cost + duration on every run  
 - Evidence-only fallback when the model fails  
 
-Enough to be credible. Not a claim that this is production SaaS tomorrow.
+Enough to be credible in a lab. Not a claim that this is production SaaS tomorrow.
 
 ---
 
-## Demo in two minutes
+## Try the flow
 
 1. `./demo/break.sh errors`  
 2. Alert (or `POST /investigate`) → Slack report + postmortem  
 3. SigNoz → service `incident-sentinel` → investigation trace  
 4. Dashboards: **Copilot Operations** + **Agent Quality**  
-5. Flash `evals/RESULTS.md` (3/3)  
+5. Check `evals/RESULTS.md`  
 6. Point at `sentinel-cost-budget` — the watcher is watched  
 
 ---
@@ -202,17 +211,16 @@ Enough to be credible. Not a claim that this is production SaaS tomorrow.
 
 1. **Observability for AI agents isn’t only “trace the LLM app.”** Sometimes the agent *is* the SRE workflow.  
 2. **Instrument both sides** — the outage and the investigation — on one OpenTelemetry-native backend.  
-3. **Measure accuracy** with real faults, or you’re demoing confidence, not competence.  
+3. **Measure accuracy** with real faults, or you’re shipping confidence, not competence.  
 4. **Meta-alerts on agent cost** turn self-telemetry into something operators can actually page on.
 
 ---
 
 ## Links
 
-- Hackathon: [Agents of SigNoz](https://www.wemakedevs.org/hackathons/signoz)  
 - Repo: [github.com/Vickyavh7/signoz-sentinel](https://github.com/Vickyavh7/signoz-sentinel)  
 - SigNoz MCP: [github.com/SigNoz/signoz-mcp-server](https://github.com/SigNoz/signoz-mcp-server)
 
 ---
 
-*Built for Agents of SigNoz (WeMakeDevs × SigNoz). AI coding assistants were used during development and will be declared on the submission form.*
+*AI coding assistants were used during development.*
