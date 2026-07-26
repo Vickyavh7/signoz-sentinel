@@ -13,11 +13,11 @@
 
 ## You still need to submit
 
-- [ ] Public GitHub URL: https://github.com/Vickyavh7/signoz-sentinel
-- [ ] Demo video URL (2–3 min)
-- [ ] Blog URL (Dev.to / Medium / Substack)
+- [x] Public GitHub URL: https://github.com/Vickyavh7/signoz-sentinel
+- [x] Demo video URL: https://youtu.be/7KFAvjVuwBc
+- [x] Blog URL: https://dev.to/vickyavh7/incident-sentinel-an-sre-copilot-that-investigates-signoz-alerts-and-observes-itself-10il
 - [ ] WeMakeDevs form — **Track 01**
-- [ ] **Declare AI assistant use**
+- [ ] **Declare AI assistant use** (in Project description if no checkbox)
 - [ ] Team member list (1–4)
 
 ## Demo video script

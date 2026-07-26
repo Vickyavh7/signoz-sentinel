@@ -15,12 +15,11 @@ Accuracy is **measured** with real fault injection (`evals/`), not claimed.
 
 ## Demo video
 
-<!-- Replace VIDEO_ID after YouTube upload (Unlisted is fine) -->
-<!--
-[![Incident Sentinel demo](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
--->
+[![Incident Sentinel demo](https://img.youtube.com/vi/7KFAvjVuwBc/maxresdefault.jpg)](https://youtu.be/7KFAvjVuwBc)
 
-Paste your Unlisted YouTube link here after upload (≤3 min). Outline: `docs/DEMO-VIDEO.md`.
+**Watch (Unlisted):** https://youtu.be/7KFAvjVuwBc  
+
+≤3 min walkthrough — alert → Slack/postmortem → investigation trace → dashboards → evals → cost meta-alert. Script: `docs/DEMO-VIDEO.md`.
 
 ## Screenshots
 
