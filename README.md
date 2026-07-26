@@ -1,11 +1,40 @@
 # Incident Sentinel
 
+<p align="center">
+  <img src="blog/images/cover-1000x420.png" alt="Incident Sentinel — When the SRE agent is also a signal" width="100%" />
+</p>
+
 **SRE Incident Copilot** for the [Agents of SigNoz](https://www.wemakedevs.org/hackathons/signoz) hackathon  
 **Track:** Track 01 — AI & Agent Observability
 
 When a SigNoz alert fires, Incident Sentinel investigates with the **SigNoz MCP server**, posts an evidence-backed report (and postmortem) to Slack, and emits its own OpenTelemetry traces and cost metrics back into the **same** SigNoz — including a meta-alert when the copilot overspends.
 
 Accuracy is **measured** with real fault injection (`evals/`), not claimed.
+
+**Blog:** [dev.to — Incident Sentinel](https://dev.to/vickyavh7/incident-sentinel-an-sre-copilot-that-investigates-signoz-alerts-and-observes-itself-10il)
+
+## Demo video
+
+<!-- Replace VIDEO_ID after YouTube upload (Unlisted is fine) -->
+<!--
+[![Incident Sentinel demo](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+-->
+
+Paste your Unlisted YouTube link here after upload (≤3 min). Outline: `docs/DEMO-VIDEO.md`.
+
+## Screenshots
+
+| Alerts (incl. cost meta-alert) | Investigation trace |
+|---|---|
+| ![Alert rules](blog/images/04-alerts.png) | ![sentinel.investigate trace](blog/images/06-trace-detail.png) |
+
+| Copilot Operations | Agent Quality |
+|---|---|
+| ![Copilot Operations](blog/images/03-copilot-operations.png) | ![Agent Quality](blog/images/02-agent-quality.png) |
+
+Services during a fault window:
+
+![SigNoz services](blog/images/01-services.png)
 
 ## Architecture
 
@@ -131,16 +160,9 @@ See `docs/RULES-COMPLIANCE.md`. Highlights:
 - Self-instrumentation with OpenTelemetry / GenAI attributes
 - AI coding assistants used during development — **declare AI use** on the submission form
 
-## Demo video outline
+## AI assistance disclosure
 
-See `docs/DEMO-VIDEO.md`. Short script:
-
-1. Inject fault → alert fires  
-2. Slack report + postmortem  
-3. Investigation trace in SigNoz  
-4. Copilot Operations + Agent Quality dashboards  
-5. Show `evals/RESULTS.md`  
-6. Cost meta-alert (copilot watching its own spend)
+This project was built with AI coding assistants (Cursor and similar tools), disclosed per hackathon rules. A human directed the design, reviewed all code and docs, and validated demo/eval claims (including the 3/3 accuracy run in `evals/RESULTS.md`).
 
 ## License
 
