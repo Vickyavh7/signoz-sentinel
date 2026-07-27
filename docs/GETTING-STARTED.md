@@ -1,6 +1,10 @@
 # Getting started (clean env)
 
-Generic setup without lab-specific hosts. Replace placeholders with your values.
+Full step-by-step deploy & configure (Foundry, MCP, k8s, alerts, dashboards, troubleshooting):
+
+→ **[`IMPLEMENTATION-GUIDE.md`](IMPLEMENTATION-GUIDE.md)**
+
+Short checklist below for a quick path.
 
 ## Foundry SigNoz + MCP
 

@@ -65,6 +65,9 @@ checkout → payment → inventory     (demo apps + fault injection)
 
 ## Quick start
 
+Full deploy & configure walkthrough: **[`docs/IMPLEMENTATION-GUIDE.md`](docs/IMPLEMENTATION-GUIDE.md)**  
+Short checklist: [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md)
+
 ### 1. Prerequisites
 
 - Docker (for [SigNoz Foundry](https://signoz.io) + MCP)
@@ -147,7 +150,7 @@ alerts/           Alert specs (errors, latency, cost budget)
 dashboards/       Incident Overview, Copilot Operations, Agent Quality
 evals/            Accuracy harness + RESULTS.md
 blog/             Hackathon blog draft
-docs/             Architecture, demo video script, rules compliance
+docs/             Architecture, implementation guide, demo script, rules
 scripts/          Deploy + SigNoz setup helpers
 ```
 
